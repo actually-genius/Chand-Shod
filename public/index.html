@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chand Shod? — Real-time Financial Rates & Crypto Engine</title>
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1 class="brand-title brand-glitch" data-text="Chand Shod?">
+            <span class="brand-text">Chand Shod</span><span class="brand-q">?</span>
+            <span class="brand-fa" title="چند شد؟">چند شد؟</span>
+          </h1>
+          <span class="subtitle">Real-time FX, Cryptocurrency & Precious Metals Engine</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="status-pill" id="status-pill">
+        <span class="status-dot"></span>
+        <span class="status-text" id="status-label">Connecting...</span>
+      </div>
+      <div class="clock-display">
+        <span class="clock-badge">Tehran: <strong id="clock-tehran">--:--:--</strong></span>
+        <span class="clock-badge utc">UTC: <strong id="clock-utc">--:--:--</strong></span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div id="default-pwd-badge" class="warning-badge hidden" title="Default password 'admin' is active! Click to change.">
+        <span>⚠️ Default Password In Use</span>
+      </div>
+      <div class="active-badge" title="Number of items included in API responses">
+        <span id="enabled-count-badge">0 / 0</span>
+        <span class="label">Active in API</span>
+      </div>
+      <button class="btn btn-primary" id="btn-scrape-now" title="Trigger immediate scrape">
+        <svg class="spin-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+        </svg>
+        <span>Scrape Now</span>
+      </button>
+      <button class="btn btn-secondary btn-sm" id="btn-logout" title="Log out of WebUI">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Logout</span>
+      </button>
+      <button class="btn btn-icon" id="theme-toggle" title="Toggle Theme">
+        <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    <!-- Quick Benchmark KPI Bar -->
+    <section class="kpi-banner">
+      <div class="kpi-card" data-code="USD">
+        <div class="kpi-header">
+          <span class="symbol">USD</span>
+          <span class="name">US Dollar</span>
+        </div>
+        <div class="kpi-value" id="kpi-usd">--</div>
+        <div class="kpi-sub" id="kpi-usd-sub">-- Tomans</div>
+      </div>
+      <div class="kpi-card" data-code="USDT">
+        <div class="kpi-header">
+          <span class="symbol">USDT</span>
+          <span class="name">Tether USDT</span>
+        </div>
+        <div class="kpi-value" id="kpi-usdt">--</div>
+        <div class="kpi-sub" id="kpi-usdt-sub">-- Tomans</div>
+      </div>
+      <div class="kpi-card" data-code="BTC">
+        <div class="kpi-header">
+          <span class="symbol">BTC</span>
+          <span class="name">Bitcoin</span>
+        </div>
+        <div class="kpi-value" id="kpi-btc">--</div>
+        <div class="kpi-sub" id="kpi-btc-sub">-- USD / Tomans</div>
+      </div>
+      <div class="kpi-card" data-code="GERAM18">
+        <div class="kpi-header">
+          <span class="symbol">GERAM18</span>
+          <span class="name">18K Gold Gram</span>
+        </div>
+        <div class="kpi-value" id="kpi-geram18">--</div>
+        <div class="kpi-sub" id="kpi-geram18-sub">-- Tomans</div>
+      </div>
+      <div class="kpi-card" data-code="SEKEE">
+        <div class="kpi-header">
+          <span class="symbol">SEKEE</span>
+          <span class="name">Emami Gold Coin</span>
+        </div>
+        <div class="kpi-value" id="kpi-sekee">--</div>
+        <div class="kpi-sub" id="kpi-sekee-sub">-- Tomans</div>
+      </div>
+      <div class="kpi-card" data-code="TON">
+        <div class="kpi-header">
+          <span class="symbol">TON / GRAM</span>
+          <span class="name">Toncoin / Gram</span>
+        </div>
+        <div class="kpi-value" id="kpi-ton">--</div>
+        <div class="kpi-sub" id="kpi-ton-sub">-- Tomans</div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="tab-rates">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Rates & API Output Selection</span>
+        <span class="tab-badge" id="tab-rates-count">0</span>
+      </button>
+
+      <button class="tab-btn" data-tab="tab-tester">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="4 17 10 11 4 5"></polyline>
+          <line x1="12" y1="19" x2="20" y2="19"></line>
+        </svg>
+        <span>Live API Tester</span>
+      </button>
+
+      <button class="tab-btn" data-tab="tab-logs">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span>Live Logs Stream (SSE)</span>
+        <span class="tab-badge pulse" id="tab-logs-badge">LIVE</span>
+      </button>
+
+      <button class="tab-btn" data-tab="tab-settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span>Scraper Settings</span>
+      </button>
+
+      <button class="tab-btn" data-tab="tab-security">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <span>API Keys & Security</span>
+        <span class="tab-badge" id="tab-keys-count">0</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: RATES & SELECTION -->
+    <section class="tab-content active" id="tab-rates">
+      <h2 class="sr-only">Rates & Asset Catalog</h2>
+      <!-- Controls & Filter Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="rates-search-input" placeholder="Search by symbol, English or Persian name (e.g., USD, Bitcoin, Gram, Gold)...">
+        </div>
+
+        <div class="toolbar-categories">
+          <button class="cat-chip active" data-category="all">All Items</button>
+          <button class="cat-chip" data-category="fiat">Fiat Currencies</button>
+          <button class="cat-chip" data-category="crypto">Cryptocurrencies</button>
+          <button class="cat-chip" data-category="gold">Gold & Bullion</button>
+          <button class="cat-chip" data-category="coin">Coins & Bubbles</button>
+          <button class="cat-chip" data-category="enabled">Active in API Only</button>
+        </div>
+
+        <div class="toolbar-actions">
+          <button class="btn btn-secondary btn-sm" id="btn-enable-all">Select All</button>
+          <button class="btn btn-secondary btn-sm" id="btn-disable-all">Deselect All</button>
+        </div>
+      </div>
+
+      <!-- Bulk Quick Actions Bar -->
+      <div class="quick-toggles-bar">
+        <span class="quick-label">Bulk API output toggles:</span>
+        <button class="btn-link" id="btn-toggle-fiat-all">Enable All Fiats</button>
+        <span class="sep">•</span>
+        <button class="btn-link" id="btn-toggle-crypto-all">Enable All Cryptos</button>
+        <span class="sep">•</span>
+        <button class="btn-link" id="btn-toggle-gold-all">Enable All Gold</button>
+        <span class="sep">•</span>
+        <button class="btn-link" id="btn-toggle-coin-all">Enable All Coins</button>
+      </div>
+
+      <!-- Rates Grid -->
+      <div class="rates-grid" id="rates-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- TAB 2: API TESTER -->
+    <section class="tab-content" id="tab-tester">
+      <div class="tester-layout">
+        <!-- Tester Left: Request Configurator -->
+        <div class="tester-controls-card">
+          <h2>Live REST API Tester</h2>
+          <p class="desc">Preview live JSON responses returned to your applications, Telegram bots, or external microservices.</p>
+
+          <div class="form-group">
+            <label>Preset Endpoints:</label>
+            <div class="preset-buttons">
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates">Active Items Only (Default)</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?all=true">All 71 Items (all=true)</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?category=crypto">Cryptos Only (category=crypto)</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?category=gold">Gold & Coins Only (category=gold)</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?symbols=USD,EUR,USDT,BTC,GERAM18">Selected Symbols (symbols=...)</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?format=simple">Simple Numeric Format (format=simple)</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="tester-key-select">Authentication Method:</label>
+            <select id="tester-key-select" class="form-input">
+              <option value="session">WebUI Admin Session (Automatic Cookie / Bearer)</option>
+            </select>
+            <span class="field-hint">Select an issued API key to test external authentication headers and snippets.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="tester-url-input">Endpoint URL:</label>
+            <div class="url-input-group">
+              <span class="method-tag">GET</span>
+              <input type="text" id="tester-url-input" class="form-input ltr" value="/api/rates">
+              <button class="btn btn-primary" id="btn-send-test">Send Request</button>
+            </div>
+          </div>
+
+          <!-- Integration Examples -->
+          <div class="integration-guide">
+            <h3>Client Integration Code:</h3>
+            <div class="code-tabs">
+              <button class="code-tab-btn active" data-lang="curl">cURL</button>
+              <button class="code-tab-btn" data-lang="python">Python</button>
+              <button class="code-tab-btn" data-lang="js">Node.js</button>
+            </div>
+            <pre class="code-snippet ltr"><code id="code-snippet-box">curl -X GET http://localhost:1718/api/rates</code></pre>
+          </div>
+        </div>
+
+        <!-- Tester Right: Live Response Viewer -->
+        <div class="tester-response-card">
+          <div class="response-header">
+            <div class="response-meta">
+              <span>Status: <strong id="res-status" class="res-status-badge">---</strong></span>
+              <span>Latency: <strong id="res-time">---</strong></span>
+              <span>Rates Count: <strong id="res-count">---</strong></span>
+            </div>
+            <div class="response-actions">
+              <button class="btn btn-secondary btn-sm" id="btn-copy-json">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>Copy JSON</span>
+              </button>
+            </div>
+          </div>
+          <pre class="response-viewer ltr"><code id="response-code-box">// Click "Send Request" to test endpoint and view live JSON output.</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: LIVE LOGS -->
+    <section class="tab-content" id="tab-logs">
+      <div class="logs-card">
+        <div class="logs-header">
+          <div class="logs-title">
+            <span class="live-dot"></span>
+            <h2>Real-Time Scraper Logs & Event Stream (SSE)</h2>
+          </div>
+          <div class="logs-controls">
+            <div class="logs-filter-group">
+              <button class="log-filter-btn active" data-filter="all">All</button>
+              <button class="log-filter-btn" data-filter="success">Success</button>
+              <button class="log-filter-btn" data-filter="info">Info</button>
+              <button class="log-filter-btn" data-filter="warn">Warn</button>
+              <button class="log-filter-btn" data-filter="error">Error</button>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-pause-logs">Pause Scroll</button>
+            <button class="btn btn-secondary btn-sm" id="btn-clear-logs">Clear Logs</button>
+          </div>
+        </div>
+
+        <div class="terminal-container" id="terminal-box">
+          <div class="terminal-logs" id="terminal-logs">
+            <!-- Streamed in real-time -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: SETTINGS -->
+    <section class="tab-content" id="tab-settings">
+      <div class="settings-card">
+        <h2>TGJU Engine & Background Scraper Settings</h2>
+        <p class="desc">Settings are saved to <code>data/config.json</code> and persist across server restarts.</p>
+
+        <form id="settings-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="setting-interval">Automatic Scrape Interval (seconds):</label>
+              <select id="setting-interval" class="form-input">
+                <option value="10">Every 10 seconds (Fast)</option>
+                <option value="30">Every 30 seconds</option>
+                <option value="60" selected>Every 60 seconds (Standard default)</option>
+                <option value="120">Every 2 minutes</option>
+                <option value="300">Every 5 minutes</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="setting-auto-scrape">Background Scraper Status:</label>
+              <select id="setting-auto-scrape" class="form-input">
+                <option value="true" selected>Enabled (Automatic background scraping)</option>
+                <option value="false">Disabled (Manual scrape only)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="setting-url">TGJU Source Node URL:</label>
+            <input type="text" id="setting-url" class="form-input ltr" value="https://call4.tgju.org/ajax.json">
+            <span class="field-hint">Default endpoint is https://call4.tgju.org/ajax.json (nodes call1 through call4 available).</span>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="btn-save-settings">Save Settings</button>
+            <span id="settings-save-alert" class="save-feedback"></span>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 5: API KEYS & SECURITY -->
+    <section class="tab-content" id="tab-security">
+      <div class="security-layout">
+        <!-- Card 1: API Key Management -->
+        <div class="settings-card security-card">
+          <div class="card-header-row">
+            <div>
+              <h2>API Access Keys</h2>
+              <p class="desc">Issue, monitor, and revoke API keys for external applications, Telegram bots, and automated trading microservices.</p>
+            </div>
+          </div>
+
+          <form id="issue-key-form" class="issue-key-form">
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+              <label for="new-key-name">Key Name / Consumer Description:</label>
+              <input type="text" id="new-key-name" class="form-input" placeholder="e.g. Telegram Rates Bot, Trading Microservice, Mobile App" required>
+            </div>
+            <button type="submit" class="btn btn-primary" id="btn-issue-key">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Issue New Key</span>
+            </button>
+          </form>
+
+          <div class="table-container">
+            <table class="data-table" id="keys-table">
+              <thead>
+                <tr>
+                  <th>Name / Label</th>
+                  <th>Key Prefix</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Last Used</th>
+                  <th>Total Requests</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="keys-table-body">
+                <tr>
+                  <td colspan="7" class="table-empty">Loading API keys...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Card 2: WebUI Admin Password Protection -->
+        <div class="settings-card security-card">
+          <h2>WebUI Administrator Password Protection</h2>
+          <p class="desc">The WebUI is password-protected to safeguard scraper configurations and rates toggles. (Default password: <code>admin</code>)</p>
+
+          <div id="pwd-card-warning" class="security-alert-box hidden">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+              <strong>Security Recommendation:</strong>
+              <p>You are currently using the default administrator password (<code>admin</code>). Please change it to a personal secret below.</p>
+            </div>
+          </div>
+
+          <form id="change-password-form">
+            <div class="form-group">
+              <label for="pwd-current">Current Password:</label>
+              <div class="password-input-group">
+                <input type="password" id="pwd-current" class="form-input" placeholder="Enter current password (default: admin)" required autocomplete="current-password">
+                <button type="button" class="btn-toggle-eye" data-target="pwd-current" title="Show/Hide">👁️</button>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="pwd-new">New Password:</label>
+                <div class="password-input-group">
+                  <input type="password" id="pwd-new" class="form-input" placeholder="Minimum 4 characters" minlength="4" required autocomplete="new-password">
+                  <button type="button" class="btn-toggle-eye" data-target="pwd-new" title="Show/Hide">👁️</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="pwd-confirm">Confirm New Password:</label>
+                <div class="password-input-group">
+                  <input type="password" id="pwd-confirm" class="form-input" placeholder="Re-type new password" minlength="4" required autocomplete="new-password">
+                  <button type="button" class="btn-toggle-eye" data-target="pwd-confirm" title="Show/Hide">👁️</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="btn-submit-change-pwd">Update Password</button>
+              <span id="pwd-change-feedback" class="save-feedback"></span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Application Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <span class="footer-logo">Chand Shod<span class="brand-q">?</span></span>
+        <span class="footer-tagline">Real-time Rates Engine</span>
+      </div>
+      <div class="footer-credits">
+        <span>built by <a href="https://github.com/actually-genius" target="_blank" rel="noopener noreferrer" class="footer-link">Genie</a>, special thanks to <a href="https://t.me/V0R3X" target="_blank" rel="noopener noreferrer" class="footer-link">V0R3X</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal 1: Login Modal Overlay -->
+  <div id="login-modal" class="auth-modal-overlay">
+    <div class="auth-modal-card">
+      <div class="auth-modal-header">
+        <div class="auth-lock-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <h2 class="brand-title brand-glitch-sm" data-text="Chand Shod?">Chand Shod<span class="brand-q">?</span></h2>
+        <p>Administrator Authentication Required</p>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <div class="form-group">
+          <label for="login-password-input">Admin Password:</label>
+          <div class="password-input-group">
+            <input type="password" id="login-password-input" class="form-input" placeholder="Enter admin password" required autocomplete="current-password" autofocus>
+            <button type="button" class="btn-toggle-eye" data-target="login-password-input" title="Show/Hide">👁️</button>
+          </div>
+        </div>
+
+        <div id="login-error-alert" class="auth-error-box hidden"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="btn-login-submit">
+          <span>Unlock Dashboard</span>
+        </button>
+
+        <div class="auth-modal-hint">
+          <span>💡 Default password is: <code>admin</code></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: One-Time Key Reveal Modal -->
+  <div id="key-reveal-modal" class="auth-modal-overlay hidden">
+    <div class="auth-modal-card reveal-card">
+      <div class="auth-modal-header">
+        <div class="auth-key-icon">🔑</div>
+        <h2>New API Key Generated</h2>
+        <p>Please copy your API key now. For your security, this key cannot be retrieved or shown again.</p>
+      </div>
+
+      <div class="key-reveal-box">
+        <div class="key-name-display" id="reveal-key-name">API Key: Bot</div>
+        <div class="key-raw-wrapper">
+          <input type="text" id="reveal-raw-key" class="form-input ltr code-font" readonly>
+          <button class="btn btn-primary btn-sm" id="btn-copy-reveal-key">
+            <span>Copy Key</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="key-usage-guide">
+        <h3>Quick Integration Example (cURL):</h3>
+        <pre class="code-snippet ltr"><code id="reveal-snippet-curl">curl -H "X-API-Key: csk_..." http://localhost:1718/api/rates</code></pre>
+      </div>
+
+      <div class="form-actions" style="margin-top: 20px; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary" id="btn-close-reveal-modal">I Have Saved My Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

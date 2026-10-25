@@ -1,0 +1,77 @@
+# ==========================================
+# Chand Shod? (چند شد؟) — .gitignore
+# ==========================================
+
+# Dependencies
+node_modules/
+jspm_packages/
+.pnpm-store/
+.pnp
+.pnp.js
+
+# Build & Standalone Binary Artifacts
+dist/
+build/
+out/
+bin/
+*.exe
+*.exe.config
+*.dll
+*.node
+
+# Runtime Data Snapshots & Credentials
+# (Keep repository clean of dynamic rates, temp files, and generated passwords/keys)
+data/latest-rates.json
+data/*.tmp
+data/auth.json
+!data/.gitkeep
+!data/config.json
+
+# Environment Variables & Local Secrets
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# AI Assistants & Browser Automation Caches
+.claude/
+.impeccable/
+.playwright-mcp/
+
+# Editor & IDE Directories
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Test & Code Coverage
+coverage/
+.nyc_output/

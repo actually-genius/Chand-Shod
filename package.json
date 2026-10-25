@@ -1,0 +1,35 @@
+{
+  "name": "chand-shod",
+  "version": "1.0.0",
+  "description": "Chand Shod? — TGJU Currency, Crypto and Gold Scraper with REST API & WebUI Dashboard",
+  "main": "server.js",
+  "bin": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "build:exe": "npx @yao-pkg/pkg . --targets node18-win-x64 --output dist/chand-shod.exe"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*"
+    ]
+  },
+  "keywords": [
+    "chand-shod",
+    "tgju",
+    "scraper",
+    "rates",
+    "crypto",
+    "gold",
+    "toman",
+    "rial",
+    "currency"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.3.0"
+  }
+}
