@@ -59,18 +59,47 @@ function showToast(message, type = 'info') {
 }
 
 // ==========================================
-// Theme Toggle
+// Theme Toggle & Brand Reload
 // ==========================================
-const themeToggleBtn = document.getElementById('theme-toggle');
-if (themeToggleBtn) {
-  themeToggleBtn.addEventListener('click', () => {
-    document.body.classList.toggle('light-theme');
-    localStorage.setItem('tgju_theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
-  });
-  if (localStorage.getItem('tgju_theme') === 'light') {
+function updateThemeUI(theme) {
+  const isLight = theme === 'light';
+  if (isLight) {
     document.body.classList.add('light-theme');
+  } else {
+    document.body.classList.remove('light-theme');
   }
+
+  document.querySelectorAll('.theme-toggle-btn').forEach((btn) => {
+    const sunIcon = btn.querySelector('.sun-icon');
+    const moonIcon = btn.querySelector('.moon-icon');
+    if (sunIcon) sunIcon.classList.toggle('hidden', isLight);
+    if (moonIcon) moonIcon.classList.toggle('hidden', !isLight);
+    btn.title = isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+    btn.setAttribute('aria-label', isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode');
+  });
 }
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('tgju_theme') || 'dark';
+  updateThemeUI(savedTheme);
+
+  document.querySelectorAll('.theme-toggle-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const currentIsLight = document.body.classList.contains('light-theme');
+      const newTheme = currentIsLight ? 'dark' : 'light';
+      localStorage.setItem('tgju_theme', newTheme);
+      updateThemeUI(newTheme);
+    });
+  });
+}
+initTheme();
+
+// Reload site when clicking logo / brand title
+document.getElementById('brand-reload')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  window.location.reload();
+});
 
 // ==========================================
 // Tab Switching
@@ -475,12 +504,27 @@ async function bulkToggleCategory(category, enabled) {
   }
 }
 
-// Filter category chips
+// Filter category chips & native dropdown
+const categorySelect = document.getElementById('category-select');
+if (categorySelect) {
+  categorySelect.addEventListener('change', (e) => {
+    state.activeCategory = e.target.value;
+    document.querySelectorAll('.cat-chip').forEach((c) => {
+      c.classList.toggle('active', c.getAttribute('data-category') === state.activeCategory);
+    });
+    renderRatesGrid();
+  });
+}
+
 document.querySelectorAll('.cat-chip').forEach((chip) => {
   chip.addEventListener('click', () => {
     document.querySelectorAll('.cat-chip').forEach((c) => c.classList.remove('active'));
     chip.classList.add('active');
     state.activeCategory = chip.getAttribute('data-category');
+    if (categorySelect) {
+      categorySelect.value = state.activeCategory;
+      categorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     renderRatesGrid();
   });
 });
@@ -515,6 +559,9 @@ if (btnScrapeNow) {
       const data = await res.json();
       if (data.success) {
         showToast(`Scrape successful (${data.count} rates updated)`, 'success');
+        try {
+          await loadInitialData();
+        } catch {}
       } else {
         throw new Error(data.error);
       }
@@ -538,16 +585,38 @@ const resCount = document.getElementById('res-count');
 const responseCodeBox = document.getElementById('response-code-box');
 const codeSnippetBox = document.getElementById('code-snippet-box');
 
-// Preset buttons
-document.querySelectorAll('.preset-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const url = btn.getAttribute('data-url');
+// Preset dropdown & buttons
+const testerPresetSelect = document.getElementById('tester-preset-select');
+if (testerPresetSelect) {
+  testerPresetSelect.addEventListener('change', (e) => {
+    const url = e.target.value;
     if (testerUrlInput) {
       testerUrlInput.value = url;
       updateCodeSnippet(url);
     }
   });
+}
+
+document.querySelectorAll('.preset-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const url = btn.getAttribute('data-url');
+    if (testerUrlInput) {
+      testerUrlInput.value = url;
+      if (testerPresetSelect) {
+        testerPresetSelect.value = url;
+        testerPresetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      updateCodeSnippet(url);
+    }
+  });
 });
+
+const testerMethodSelect = document.getElementById('tester-method-select');
+if (testerMethodSelect) {
+  testerMethodSelect.addEventListener('change', () => {
+    updateCodeSnippet(testerUrlInput ? testerUrlInput.value : '/api/rates');
+  });
+}
 
 if (testerUrlInput) {
   testerUrlInput.addEventListener('input', (e) => {
@@ -576,6 +645,7 @@ function updateCodeSnippet(endpoint) {
   if (!codeSnippetBox) return;
   const origin = window.location.origin && window.location.origin.startsWith('http') ? window.location.origin : 'http://localhost:1718';
   const fullUrl = `${origin}${endpoint}`;
+  const method = testerMethodSelect ? testerMethodSelect.value : 'GET';
 
   const selectedKeyId = testerKeySelect ? testerKeySelect.value : 'session';
   const isKey = selectedKeyId !== 'session';
@@ -583,21 +653,22 @@ function updateCodeSnippet(endpoint) {
 
   if (activeSnippetLang === 'curl') {
     if (isKey) {
-      codeSnippetBox.textContent = `curl -X GET "${fullUrl}" \\\n  -H "X-API-Key: ${rawKey}"`;
+      codeSnippetBox.textContent = `curl -X ${method} "${fullUrl}" \\\n  -H "X-API-Key: ${rawKey}"`;
     } else {
-      codeSnippetBox.textContent = `curl -X GET "${fullUrl}"`;
+      codeSnippetBox.textContent = `curl -X ${method} "${fullUrl}"`;
     }
   } else if (activeSnippetLang === 'python') {
+    const pyMethod = method.toLowerCase();
     if (isKey) {
-      codeSnippetBox.textContent = `import requests\n\nheaders = {\n    "X-API-Key": "${rawKey}"\n}\n\nr = requests.get("${fullUrl}", headers=headers)\ndata = r.json()\nprint(data["rates"])`;
+      codeSnippetBox.textContent = `import requests\n\nheaders = {\n    "X-API-Key": "${rawKey}"\n}\n\nr = requests.${pyMethod}("${fullUrl}", headers=headers)\ndata = r.json()\nprint(data)`;
     } else {
-      codeSnippetBox.textContent = `import requests\n\nr = requests.get("${fullUrl}")\ndata = r.json()\nprint(data["rates"])`;
+      codeSnippetBox.textContent = `import requests\n\nr = requests.${pyMethod}("${fullUrl}")\ndata = r.json()\nprint(data)`;
     }
   } else if (activeSnippetLang === 'js') {
     if (isKey) {
-      codeSnippetBox.textContent = `const res = await fetch("${fullUrl}", {\n  headers: {\n    "X-API-Key": "${rawKey}"\n  }\n});\nconst data = await res.json();\nconsole.log(data.rates);`;
+      codeSnippetBox.textContent = `const res = await fetch("${fullUrl}", {\n  method: "${method}",\n  headers: {\n    "X-API-Key": "${rawKey}"\n  }\n});\nconst data = await res.json();\nconsole.log(data);`;
     } else {
-      codeSnippetBox.textContent = `const res = await fetch("${fullUrl}");\nconst data = await res.json();\nconsole.log(data.rates);`;
+      codeSnippetBox.textContent = `const res = await fetch("${fullUrl}", {\n  method: "${method}"\n});\nconst data = await res.json();\nconsole.log(data);`;
     }
   }
 }
@@ -605,6 +676,7 @@ function updateCodeSnippet(endpoint) {
 if (btnSendTest) {
   btnSendTest.addEventListener('click', async () => {
     const endpoint = testerUrlInput.value.trim() || '/api/rates';
+    const method = testerMethodSelect ? testerMethodSelect.value : 'GET';
     btnSendTest.disabled = true;
     btnSendTest.textContent = 'Sending...';
 
@@ -624,6 +696,7 @@ if (btnSendTest) {
     const t0 = performance.now();
     try {
       const res = await fetch(endpoint, {
+        method,
         headers: Object.keys(fetchHeaders).length ? fetchHeaders : undefined,
       });
       const elapsed = Math.round(performance.now() - t0);
@@ -719,12 +792,27 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-// Logs Controls
+// Logs Controls & native dropdown
+const logFilterSelect = document.getElementById('log-filter-select');
+if (logFilterSelect) {
+  logFilterSelect.addEventListener('change', (e) => {
+    state.logFilter = e.target.value;
+    document.querySelectorAll('.log-filter-btn').forEach((b) => {
+      b.classList.toggle('active', b.getAttribute('data-filter') === state.logFilter);
+    });
+    renderLogs();
+  });
+}
+
 document.querySelectorAll('.log-filter-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.log-filter-btn').forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
     state.logFilter = btn.getAttribute('data-filter');
+    if (logFilterSelect) {
+      logFilterSelect.value = state.logFilter;
+      logFilterSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     renderLogs();
   });
 });
@@ -759,9 +847,11 @@ function populateSettingsForm(cfg) {
 
   if (selInterval && cfg.scrapeIntervalSeconds) {
     selInterval.value = String(cfg.scrapeIntervalSeconds);
+    selInterval.dispatchEvent(new Event('change', { bubbles: true }));
   }
   if (selAutoScrape && cfg.autoScrape !== undefined) {
     selAutoScrape.value = String(cfg.autoScrape);
+    selAutoScrape.dispatchEvent(new Event('change', { bubbles: true }));
   }
   if (inpUrl && cfg.tgjuUrl) {
     inpUrl.value = cfg.tgjuUrl;
@@ -811,6 +901,7 @@ if (settingsForm) {
 function showLoginModal() {
   const modal = document.getElementById('login-modal');
   if (modal) modal.classList.remove('hidden');
+  document.querySelectorAll('.session-only').forEach((el) => el.classList.add('hidden'));
   const input = document.getElementById('login-password-input');
   if (input) {
     input.value = '';
@@ -823,6 +914,7 @@ function showLoginModal() {
 function hideLoginModal() {
   const modal = document.getElementById('login-modal');
   if (modal) modal.classList.add('hidden');
+  document.querySelectorAll('.session-only').forEach((el) => el.classList.remove('hidden'));
 }
 
 function updateDefaultPasswordUI(isDefault) {
@@ -1163,6 +1255,7 @@ function updateTesterKeySelect() {
   if (previousVal && Array.from(sel.options).some((o) => o.value === previousVal)) {
     sel.value = previousVal;
   }
+  sel.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 // Key Reveal Modal
@@ -1236,3 +1329,287 @@ if (issueKeyForm) {
 
 // Initial Kickoff
 checkAuthStatus();
+
+// ==========================================
+// Custom Themed Dropdown Component
+// ==========================================
+function setupCustomDropdown(selectEl) {
+  if (!selectEl || selectEl.dataset.customized === 'true') return;
+  selectEl.dataset.customized = 'true';
+
+  // Mark native select as visually hidden (accessible, forms work, pointer-events none)
+  selectEl.classList.add('custom-select-native');
+
+  // Create wrapper
+  const wrapper = document.createElement('div');
+  wrapper.className = 'custom-select-wrapper';
+  if (selectEl.id) wrapper.dataset.for = selectEl.id;
+
+  // Class modifiers based on parent/type
+  if (selectEl.classList.contains('method-tag-select')) {
+    wrapper.classList.add('method-tag-wrapper');
+  } else if (selectEl.classList.contains('category-select-dropdown')) {
+    wrapper.classList.add('category-select-wrapper');
+  } else if (selectEl.classList.contains('log-filter-dropdown')) {
+    wrapper.classList.add('log-filter-wrapper');
+  } else if (selectEl.classList.contains('form-input')) {
+    wrapper.classList.add('form-input-wrapper');
+  }
+
+  // Trigger button
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'custom-select-trigger';
+  if (selectEl.classList.contains('method-tag-select')) {
+    trigger.classList.add('method-tag-trigger');
+  }
+  trigger.setAttribute('aria-haspopup', 'listbox');
+  trigger.setAttribute('aria-expanded', 'false');
+
+  const valueSpan = document.createElement('span');
+  valueSpan.className = 'custom-select-value';
+
+  const arrowSpan = document.createElement('span');
+  arrowSpan.className = 'custom-select-arrow';
+  arrowSpan.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+
+  trigger.appendChild(valueSpan);
+  trigger.appendChild(arrowSpan);
+
+  // Options Menu
+  const menu = document.createElement('div');
+  menu.className = 'custom-select-menu';
+  menu.setAttribute('role', 'listbox');
+
+  function renderOptions() {
+    menu.innerHTML = '';
+    const options = Array.from(selectEl.options);
+    const selectedOption = selectEl.options[selectEl.selectedIndex] || options[0];
+
+    valueSpan.textContent = selectedOption ? selectedOption.text : '';
+
+    options.forEach((opt, idx) => {
+      const optEl = document.createElement('div');
+      optEl.className = 'custom-select-option';
+      optEl.setAttribute('role', 'option');
+      optEl.dataset.value = opt.value;
+      optEl.dataset.index = String(idx);
+
+      const isSelected = opt.value === selectEl.value;
+      if (isSelected) {
+        optEl.classList.add('is-selected');
+        optEl.setAttribute('aria-selected', 'true');
+      }
+
+      const textSpan = document.createElement('span');
+      textSpan.className = 'option-text';
+      textSpan.textContent = opt.text;
+      optEl.appendChild(textSpan);
+
+      if (isSelected) {
+        const checkSpan = document.createElement('span');
+        checkSpan.className = 'option-check';
+        checkSpan.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        optEl.appendChild(checkSpan);
+      }
+
+      optEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (selectEl.value !== opt.value) {
+          selectEl.value = opt.value;
+          selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        syncFromSelect();
+        closeMenu();
+      });
+
+      menu.appendChild(optEl);
+    });
+  }
+
+  function syncFromSelect() {
+    const selectedOption = selectEl.options[selectEl.selectedIndex];
+    if (selectedOption) {
+      valueSpan.textContent = selectedOption.text;
+    }
+    menu.querySelectorAll('.custom-select-option').forEach((item) => {
+      const isSelected = item.dataset.value === selectEl.value;
+      item.classList.toggle('is-selected', isSelected);
+      item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+
+      const existingCheck = item.querySelector('.option-check');
+      if (isSelected && !existingCheck) {
+        const checkSpan = document.createElement('span');
+        checkSpan.className = 'option-check';
+        checkSpan.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        item.appendChild(checkSpan);
+      } else if (!isSelected && existingCheck) {
+        existingCheck.remove();
+      }
+    });
+  }
+
+  function openMenu() {
+    // Close other custom dropdowns
+    document.querySelectorAll('.custom-select-wrapper.is-open').forEach((w) => {
+      if (w !== wrapper) {
+        w.classList.remove('is-open');
+        const trig = w.querySelector('.custom-select-trigger');
+        if (trig) trig.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Check vertical overflow to open up or down
+    const rect = trigger.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceBelow < 280 && rect.top > 280) {
+      wrapper.classList.add('opens-up');
+    } else {
+      wrapper.classList.remove('opens-up');
+    }
+
+    // Check horizontal alignment for right edge
+    if (rect.right + 120 > window.innerWidth && rect.left > 150) {
+      menu.style.left = 'auto';
+      menu.style.right = '0';
+    } else {
+      menu.style.left = '0';
+      menu.style.right = 'auto';
+    }
+
+    wrapper.classList.add('is-open');
+    trigger.setAttribute('aria-expanded', 'true');
+
+    const selItem = menu.querySelector('.custom-select-option.is-selected');
+    if (selItem) {
+      selItem.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  function closeMenu() {
+    wrapper.classList.remove('is-open');
+    trigger.setAttribute('aria-expanded', 'false');
+    menu.querySelectorAll('.custom-select-option').forEach(el => el.classList.remove('is-highlighted'));
+  }
+
+  function toggleMenu() {
+    if (wrapper.classList.contains('is-open')) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMenu();
+  });
+
+  // Keyboard navigation
+  trigger.addEventListener('keydown', (e) => {
+    const isOpen = wrapper.classList.contains('is-open');
+    const optionEls = Array.from(menu.querySelectorAll('.custom-select-option'));
+    let highlightedIndex = optionEls.findIndex(el => el.classList.contains('is-highlighted'));
+    if (highlightedIndex === -1) {
+      highlightedIndex = optionEls.findIndex(el => el.classList.contains('is-selected'));
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!isOpen) {
+        openMenu();
+      } else {
+        highlightedIndex = (highlightedIndex + 1) % optionEls.length;
+        optionEls.forEach((el, idx) => el.classList.toggle('is-highlighted', idx === highlightedIndex));
+        optionEls[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) {
+        openMenu();
+      } else {
+        highlightedIndex = (highlightedIndex - 1 + optionEls.length) % optionEls.length;
+        optionEls.forEach((el, idx) => el.classList.toggle('is-highlighted', idx === highlightedIndex));
+        optionEls[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+      }
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (!isOpen) {
+        openMenu();
+      } else {
+        const targetOption = optionEls[highlightedIndex] || optionEls.find(el => el.classList.contains('is-selected'));
+        if (targetOption) {
+          targetOption.click();
+        } else {
+          closeMenu();
+        }
+      }
+    } else if (e.key === 'Escape' || e.key === 'Tab') {
+      if (isOpen) {
+        closeMenu();
+        if (e.key === 'Escape') e.preventDefault();
+      }
+    }
+  });
+
+  // Native select change event handler
+  selectEl.addEventListener('change', () => {
+    syncFromSelect();
+  });
+
+  // Connect associated label if exists
+  if (selectEl.id) {
+    const label = document.querySelector(`label[for="${selectEl.id}"]`);
+    if (label) {
+      label.addEventListener('click', (e) => {
+        e.preventDefault();
+        trigger.focus();
+        toggleMenu();
+      });
+    }
+  }
+
+  // Watch for dynamic changes in select options (e.g. API keys loading)
+  const observer = new MutationObserver(() => {
+    renderOptions();
+  });
+  observer.observe(selectEl, { childList: true });
+
+  renderOptions();
+
+  // Mount in DOM: replace select with wrapper, put select inside wrapper
+  selectEl.parentNode.insertBefore(wrapper, selectEl);
+  wrapper.appendChild(selectEl);
+  wrapper.appendChild(trigger);
+  wrapper.appendChild(menu);
+}
+
+function initCustomSelects() {
+  document.querySelectorAll('select').forEach((sel) => {
+    setupCustomDropdown(sel);
+  });
+}
+
+// Global click-outside & escape listeners
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.custom-select-wrapper')) {
+    document.querySelectorAll('.custom-select-wrapper.is-open').forEach((w) => {
+      w.classList.remove('is-open');
+      const trig = w.querySelector('.custom-select-trigger');
+      if (trig) trig.setAttribute('aria-expanded', 'false');
+    });
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.custom-select-wrapper.is-open').forEach((w) => {
+      w.classList.remove('is-open');
+      const trig = w.querySelector('.custom-select-trigger');
+      if (trig) trig.setAttribute('aria-expanded', 'false');
+    });
+  }
+});
+
+// Initialize Custom Selects
+initCustomSelects();

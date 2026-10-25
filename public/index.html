@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chand Shod? — Real-time Financial Rates & Crypto Engine</title>
   <link rel="stylesheet" href="assets/fonts/fonts.css">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2.0">
 </head>
 <body class="dark-theme">
   <!-- Top Navigation Bar -->
   <header class="app-header">
     <div class="header-left">
-      <div class="logo-group">
+      <a href="/" class="logo-group logo-link" id="brand-reload" title="Reload Chand Shod?">
         <div class="logo-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
@@ -24,7 +24,7 @@
           </h1>
           <span class="subtitle">Real-time FX, Cryptocurrency & Precious Metals Engine</span>
         </div>
-      </div>
+      </a>
     </div>
 
     <div class="header-center">
@@ -42,17 +42,17 @@
       <div id="default-pwd-badge" class="warning-badge hidden" title="Default password 'admin' is active! Click to change.">
         <span>⚠️ Default Password In Use</span>
       </div>
-      <div class="active-badge" title="Number of items included in API responses">
+      <div class="active-badge session-only hidden" id="header-active-badge" title="Number of items included in API responses">
         <span id="enabled-count-badge">0 / 0</span>
         <span class="label">Active in API</span>
       </div>
-      <button class="btn btn-primary" id="btn-scrape-now" title="Trigger immediate scrape">
+      <button class="btn btn-primary session-only hidden" id="btn-scrape-now" title="Trigger immediate scrape">
         <svg class="spin-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
         </svg>
         <span>Scrape Now</span>
       </button>
-      <button class="btn btn-secondary btn-sm" id="btn-logout" title="Log out of WebUI">
+      <button class="btn btn-secondary btn-sm session-only hidden" id="btn-logout" title="Log out of WebUI">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
           <polyline points="16 17 21 12 16 7"></polyline>
@@ -60,7 +60,7 @@
         </svg>
         <span>Logout</span>
       </button>
-      <button class="btn btn-icon" id="theme-toggle" title="Toggle Theme">
+      <button class="btn btn-icon theme-toggle-btn" id="theme-toggle" title="Switch to Light Mode" aria-label="Toggle Theme">
         <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="5"></circle>
           <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -71,6 +71,9 @@
           <line x1="21" y1="12" x2="23" y2="12"></line>
           <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="moon-icon hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
       </button>
     </div>
@@ -195,6 +198,14 @@
         </div>
 
         <div class="toolbar-categories">
+          <select id="category-select" class="form-input category-select-dropdown" aria-label="Filter by Category">
+            <option value="all">📁 All Categories (71 Items)</option>
+            <option value="fiat">💵 Fiat Currencies</option>
+            <option value="crypto">🪙 Cryptocurrencies</option>
+            <option value="gold">🥇 Gold & Bullion</option>
+            <option value="coin">🪙 Coins & Bubbles</option>
+            <option value="enabled">⚡ Active in API Only</option>
+          </select>
           <button class="cat-chip active" data-category="all">All Items</button>
           <button class="cat-chip" data-category="fiat">Fiat Currencies</button>
           <button class="cat-chip" data-category="crypto">Cryptocurrencies</button>
@@ -236,14 +247,24 @@
           <p class="desc">Preview live JSON responses returned to your applications, Telegram bots, or external microservices.</p>
 
           <div class="form-group">
-            <label>Preset Endpoints:</label>
+            <label for="tester-preset-select">Preset Endpoints:</label>
+            <select id="tester-preset-select" class="form-input">
+              <option value="/api/rates" selected>Active Items Only (Default) — /api/rates</option>
+              <option value="/api/rates?all=true">All 71 Items — /api/rates?all=true</option>
+              <option value="/api/rates?category=crypto">Cryptocurrencies Only — /api/rates?category=crypto</option>
+              <option value="/api/rates?category=gold">Gold & Bullion Only — /api/rates?category=gold</option>
+              <option value="/api/rates?category=fiat">Fiat Currencies Only — /api/rates?category=fiat</option>
+              <option value="/api/rates?category=coin">Coins & Bubbles Only — /api/rates?category=coin</option>
+              <option value="/api/rates?symbols=USD,EUR,USDT,BTC,GERAM18">Selected Benchmark Symbols — /api/rates?symbols=...</option>
+              <option value="/api/rates?format=simple">Simple Numeric Values — /api/rates?format=simple</option>
+            </select>
             <div class="preset-buttons">
-              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates">Active Items Only (Default)</button>
-              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?all=true">All 71 Items (all=true)</button>
-              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?category=crypto">Cryptos Only (category=crypto)</button>
-              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?category=gold">Gold & Coins Only (category=gold)</button>
-              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?symbols=USD,EUR,USDT,BTC,GERAM18">Selected Symbols (symbols=...)</button>
-              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?format=simple">Simple Numeric Format (format=simple)</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates">Active</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?all=true">All 71</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?category=crypto">Crypto</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?category=gold">Gold</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?symbols=USD,EUR,USDT,BTC,GERAM18">Selected</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-url="/api/rates?format=simple">Simple</button>
             </div>
           </div>
 
@@ -258,7 +279,12 @@
           <div class="form-group">
             <label for="tester-url-input">Endpoint URL:</label>
             <div class="url-input-group">
-              <span class="method-tag">GET</span>
+              <select id="tester-method-select" class="method-tag-select" aria-label="HTTP Method">
+                <option value="GET" selected>GET</option>
+                <option value="POST">POST</option>
+                <option value="HEAD">HEAD</option>
+                <option value="OPTIONS">OPTIONS</option>
+              </select>
               <input type="text" id="tester-url-input" class="form-input ltr" value="/api/rates">
               <button class="btn btn-primary" id="btn-send-test">Send Request</button>
             </div>
@@ -308,6 +334,13 @@
             <h2>Real-Time Scraper Logs & Event Stream (SSE)</h2>
           </div>
           <div class="logs-controls">
+            <select id="log-filter-select" class="form-input log-filter-dropdown" aria-label="Filter Log Level">
+              <option value="all" selected>All Levels (Verbose)</option>
+              <option value="success">✅ Success Only</option>
+              <option value="info">ℹ️ Info Only</option>
+              <option value="warn">⚠️ Warnings Only</option>
+              <option value="error">❌ Errors Only</option>
+            </select>
             <div class="logs-filter-group">
               <button class="log-filter-btn active" data-filter="all">All</button>
               <button class="log-filter-btn" data-filter="success">Success</button>
@@ -485,6 +518,22 @@
   <div id="login-modal" class="auth-modal-overlay">
     <div class="auth-modal-card">
       <div class="auth-modal-header">
+        <button type="button" class="btn btn-icon theme-toggle-btn auth-theme-toggle" title="Switch Theme" aria-label="Toggle Theme">
+          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
         <div class="auth-lock-icon">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -550,6 +599,6 @@
   <!-- Notification Toast -->
   <div id="toast" class="toast"></div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2.0"></script>
 </body>
 </html>
